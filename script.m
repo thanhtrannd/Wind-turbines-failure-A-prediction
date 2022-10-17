@@ -475,27 +475,40 @@ for factor = 1:4
     pcas = {'PC 1','PC 2','PC 3','PC 4','PC 5','PC 6', 'PC 7','PC 8'};
     legend(pcas)
 
-%     %%Biplots
-%     % Computing the biplot
-%     subplot(1,2,1);
-%     vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
-%     'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
-%     'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
-%     'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
-%     'Sensor 25','Sensor 26','Sensor 27'};
-%     biplot(PCA_score(:,1:2),'Scores',PCA_score(:,1:2),'VarLabels',vbls);
-%     
-%     xlim([-1 1]);
-%     ylim([-1 1]);
-%     %%T-squared control chart
-%     % Computing T2 control chart
-%     subplot(1,2,2);
-%     a = 1 : length(PCA_tsquare);
-%     plot(a, PCA_tsquare)
-%     xlabel("Sample")
-%     ylabel("T2 Square Scores")
-end
+    % Biplots
+    % Computing the biplot
+    figure;
+    vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
+    'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
+    'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
+    'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
+    'Sensor 25','Sensor 26','Sensor 27'};
+    for i = 1: length(PCA_Z)
+        subplot(3,2,i*2-1);
+        biplot(PCA_coeff(:,1:2),'Scores',PCA_Z{i}(:,1:2),'VarLabels',vbls);
+        title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+    end
+    xlim([-1 1]);
+    ylim([-1 1]);
+    % T-squared control chart
+    % Computing T2 control chart
+    T2 = cell(chosen_nWTs, 1);
+    for i = 1: length(norm_down_Z)
+        T2{i} = t2comp(norm_down_Z{i}, PCA_coeff, PCA_latent, chosen_nPCs);
+        subplot(3,2, i*2);
+        plot(down_Z_Idx{i}, T2{i});
+        xlabel("Sample");
+        ylabel("T2 Square Scores");
+        title(["T-squared control chart of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+    end
 
+end
+% T2 Function
+function T2     = t2comp(data, loadings, latent, comp)
+        score       = data * loadings(:,1:comp);
+        standscores = bsxfun(@times, score(:,1:comp), 1./sqrt(latent(1:comp,:))');
+        T2          = sum(standscores.^2,2);
+end
 
 
 
