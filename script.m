@@ -399,108 +399,112 @@ for factor = 1:4
 %     figure;
 %     plot(1:numel(PCA_latent), PCA_latent, "-bo")
 %     title('PCA achieved Latent values')
-
+% 
     % Defining threshold for explained variance to preserve
     threshold = 90;
     % Getting the number of PCs to keep
-    chosen_nPCs = find(cumsum(PCA_pexp)>threshold, 1);
-%     % Pareto chart of explained variance
-%     figure;
-%     pareto(PCA_pexp);
-%     xlabel('Principal Component')
-%     ylabel('Variance Explained (%)')
-%     title('Pareto chart of PCA explained variance')
-    % Extracting/Transforming data using obtained PCA
-    PCA_Z = cell(chosen_nWTs, 1);
+    ori_chosen_nPCs = find(cumsum(PCA_pexp)>threshold, 1);
+     nPCs_test = 2:ori_chosen_nPCs
+     for chosen_nPCs = nPCs_test
+        %     % Pareto chart of explained variance
+    %     figure;
+    %     pareto(PCA_pexp);
+    %     xlabel('Principal Component')
+    %     ylabel('Variance Explained (%)')
+    %     title('Pareto chart of PCA explained variance')
+        % Extracting/Transforming data using obtained PCA
+        PCA_Z = cell(chosen_nWTs, 1);
+        
+        % Extracting PCA scores of healthy turbine No.2WT
+        PCA_Z{1} = PCA_score(:,1:chosen_nPCs);
+        % Transforming data of faulty turbin No.14WT
+        PCA_Z{2} = (norm_down_Z{2}-PCA_mu)*PCA_coeff(:,1:chosen_nPCs);
+        % Transforming data of faulty turbin No.39WT
+        PCA_Z{3} = (norm_down_Z{3}-PCA_mu)*PCA_coeff(:,1:chosen_nPCs);
+        
     
-    % Extracting PCA scores of healthy turbine No.2WT
-    PCA_Z{1} = PCA_score(:,1:chosen_nPCs);
-    % Transforming data of faulty turbin No.14WT
-    PCA_Z{2} = (norm_down_Z{2}-PCA_mu)*PCA_coeff(:,1:chosen_nPCs);
-    % Transforming data of faulty turbin No.39WT
-    PCA_Z{3} = (norm_down_Z{3}-PCA_mu)*PCA_coeff(:,1:chosen_nPCs);
     
-
-
-
-    %Visualization of down-sampling time-series data before PCA transformation
-    figure;
-    for turbine_i = 1:length(norm_down_Z)
-        subplot(length(norm_down_Z),3,turbine_i);
-        for feature_i = 1:size(norm_down_Z{turbine_i}, 2)
-            nObs = size(norm_down_Z{turbine_i},1);
-            plot(down_Z_Idx{turbine_i}, norm_down_Z{turbine_i}(:,feature_i)), hold on;
-            title(sprintf("Time series plot before PCA of turbine %s, down-sampling factor = %d", chosen_turbine_idx{turbine_i}, downsampling_factor))
-        end
-        hold off
-    end
-    vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
-    'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
-    'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
-    'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
-    'Sensor 25','Sensor 26','Sensor 27'};
-    legend(vbls)
     
-    % Visualization of down-sampling time-series data before PCA
-    % transformation variables “Sensor 9”, “Sensor 12”, “Sensor 13”, “Sensor 15” removed 
-    norm_down_Z_ = cell(numel(class_Z), 1);
-    %figure;
-    for turbine_i = 1:length(norm_down_Z)
-        norm_down_Z_{turbine_i} = norm_down_Z{turbine_i}(:,[1:8, 10:11, 14, 16:end])
-        subplot(length(norm_down_Z_),3,turbine_i+3);
-        for feature_i = 1:size(norm_down_Z_{turbine_i}, 2)
-            nObs = size(norm_down_Z_{turbine_i},1);
-            plot(down_Z_Idx{turbine_i}, norm_down_Z_{turbine_i}(:,feature_i)), hold on;
-            title(sprintf("Time series plot before PCA of turbine %s with some vars excluded, down-sampling factor = %d", chosen_turbine_idx{turbine_i}, downsampling_factor))
+        %Visualization of down-sampling time-series data before PCA transformation
+        figure;
+        for turbine_i = 1:length(norm_down_Z)
+            subplot(length(norm_down_Z),3,turbine_i);
+            for feature_i = 1:size(norm_down_Z{turbine_i}, 2)
+                nObs = size(norm_down_Z{turbine_i},1);
+                plot(down_Z_Idx{turbine_i}, norm_down_Z{turbine_i}(:,feature_i)), hold on;
+                title(sprintf("Time series plot before PCA of turbine %s, down-sampling factor = %d", chosen_turbine_idx{turbine_i}, downsampling_factor))
+            end
+            hold off
         end
-        hold off
-    end
-    vbls_ = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
-    'Sensor 7','Sensor 8','Sensor 10','Sensor 11','Sensor 14','Sensor 16','Sensor 17','Sensor 18', ...
-    'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
-    'Sensor 25','Sensor 26','Sensor 27'};
-    legend(vbls_)
-
-    %Visualization of time-series data after PCA transformation
-    %figure;
-    for turbine_i = 1:length(PCA_Z)
-        subplot(length(PCA_Z),3,turbine_i+6);
-        for feature_i = 1:size(PCA_Z{turbine_i}, 2)
-            nObs = size(PCA_Z{turbine_i},1);
-            plot(down_Z_Idx{turbine_i}, PCA_Z{turbine_i}(:,feature_i)), hold on;
-            title(sprintf("Time series plot after PCA of turbine %s, down-sampling factor = %d", chosen_turbine_idx{turbine_i}, downsampling_factor))
+        vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
+        'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
+        'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
+        'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
+        'Sensor 25','Sensor 26','Sensor 27'};
+        legend(vbls)
+        
+        % Visualization of down-sampling time-series data before PCA
+        % transformation variables “Sensor 9”, “Sensor 12”, “Sensor 13”, “Sensor 15” removed 
+        norm_down_Z_ = cell(numel(class_Z), 1);
+        %figure;
+        for turbine_i = 1:length(norm_down_Z)
+            norm_down_Z_{turbine_i} = norm_down_Z{turbine_i}(:,[1:8, 10:11, 14, 16:end])
+            subplot(length(norm_down_Z_),3,turbine_i+3);
+            for feature_i = 1:size(norm_down_Z_{turbine_i}, 2)
+                nObs = size(norm_down_Z_{turbine_i},1);
+                plot(down_Z_Idx{turbine_i}, norm_down_Z_{turbine_i}(:,feature_i)), hold on;
+                title(sprintf("Time series plot before PCA of turbine %s with some vars excluded, down-sampling factor = %d", chosen_turbine_idx{turbine_i}, downsampling_factor))
+            end
+            hold off
         end
-        hold off
-    end
-    pcas = {'PC 1','PC 2','PC 3','PC 4','PC 5','PC 6', 'PC 7','PC 8'};
-    legend(pcas)
+        vbls_ = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
+        'Sensor 7','Sensor 8','Sensor 10','Sensor 11','Sensor 14','Sensor 16','Sensor 17','Sensor 18', ...
+        'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
+        'Sensor 25','Sensor 26','Sensor 27'};
+        legend(vbls_)
+    
+        %Visualization of time-series data after PCA transformation
+        %figure;
+        for turbine_i = 1:length(PCA_Z)
+            subplot(length(PCA_Z),3,turbine_i+6);
+            for feature_i = 1:size(PCA_Z{turbine_i}, 2)
+                nObs = size(PCA_Z{turbine_i},1);
+                plot(down_Z_Idx{turbine_i}, PCA_Z{turbine_i}(:,feature_i)), hold on;
+                title(sprintf("Time series plot after PCA of turbine %s, down-sampling factor = %d", chosen_turbine_idx{turbine_i}, downsampling_factor))
+            end
+            hold off
+        end
+        pcas = {'PC 1','PC 2','PC 3','PC 4','PC 5','PC 6', 'PC 7','PC 8'};
+        legend(pcas)
+    
+        % Biplots
+        % Computing the biplot
+        figure;
+        vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
+        'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
+        'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
+        'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
+        'Sensor 25','Sensor 26','Sensor 27'};
+        for i = 1: length(PCA_Z)
+            subplot(3,2,i*2-1);
+            biplot(PCA_coeff(:,1:2),'Scores',PCA_Z{i}(:,1:2),'VarLabels',vbls);
+            title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+        end
+        xlim([-1 1]);
+        ylim([-1 1]);
+        % T-squared control chart
+        % Computing T2 control chart
+        T2 = cell(chosen_nWTs, 1);
+        for i = 1: length(norm_down_Z)
+            T2{i} = t2comp(norm_down_Z{i}, PCA_coeff, PCA_latent, chosen_nPCs);
+            subplot(3,2, i*2);
+            plot(down_Z_Idx{i}, T2{i});
+            xlabel("Sample");
+            ylabel("T2 Square Scores");
+            title(["T-squared control chart of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+        end
 
-    % Biplots
-    % Computing the biplot
-    figure;
-    vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
-    'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
-    'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
-    'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
-    'Sensor 25','Sensor 26','Sensor 27'};
-    for i = 1: length(PCA_Z)
-        subplot(3,2,i*2-1);
-        biplot(PCA_coeff(:,1:2),'Scores',PCA_Z{i}(:,1:2),'VarLabels',vbls);
-        title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
-    end
-    xlim([-1 1]);
-    ylim([-1 1]);
-    % T-squared control chart
-    % Computing T2 control chart
-    T2 = cell(chosen_nWTs, 1);
-    for i = 1: length(norm_down_Z)
-        T2{i} = t2comp(norm_down_Z{i}, PCA_coeff, PCA_latent, chosen_nPCs);
-        subplot(3,2, i*2);
-        plot(down_Z_Idx{i}, T2{i});
-        xlabel("Sample");
-        ylabel("T2 Square Scores");
-        title(["T-squared control chart of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
-    end
+     end
 
 end
 % T2 Function
