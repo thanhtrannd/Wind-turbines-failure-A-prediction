@@ -404,8 +404,10 @@ for factor = 1:4
     threshold = 90;
     % Getting the number of PCs to keep
     ori_chosen_nPCs = find(cumsum(PCA_pexp)>threshold, 1);
-     nPCs_test = 2:ori_chosen_nPCs
-     for chosen_nPCs = nPCs_test
+     %nPCs_test = 2:ori_chosen_nPCs
+     nPCs_test = [2:3]
+     for i_nPCs = numel(nPCs_test)
+         chosen_nPCs = nPCs_test(i_nPCs);
         %     % Pareto chart of explained variance
     %     figure;
     %     pareto(PCA_pexp);
@@ -476,9 +478,28 @@ for factor = 1:4
         end
         pcas = {'PC 1','PC 2','PC 3','PC 4','PC 5','PC 6', 'PC 7','PC 8'};
         legend(pcas)
-    
+        
+        % Visualization with Scatter plots of PCA data with 2 and 3 chosen PCs
+        % Scatter plot of PCA data with 2 PCs
+        figure;
+        for turbine_i = 1:length(PCA_Z)
+            scatter(PCA_Z{turbine_i}(:,1), PCA_Z{turbine_i}(:,2), '.'), hold on;
+        end
+        hold off
+        pcas = {chosen_turbine_idx{1},chosen_turbine_idx{2},chosen_turbine_idx{3}};
+        legend(pcas)
+        
+        % Scatter plot of PCA data with 3 PCs
+        figure;
+        for turbine_i = 1:length(PCA_Z)
+            scatter3(PCA_Z{turbine_i}(:,1), PCA_Z{turbine_i}(:,2), PCA_Z{turbine_i}(:,3), '.'), hold on;
+        end
+        hold off
+        pcas = {chosen_turbine_idx{1},chosen_turbine_idx{2},chosen_turbine_idx{3}};
+        legend(pcas)
+
         % Biplots
-        % Computing the biplot
+        % Computing the biplot with PC1 and PC2
         figure;
         vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
         'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
@@ -489,6 +510,36 @@ for factor = 1:4
             subplot(3,2,i*2-1);
             biplot(PCA_coeff(:,1:2),'Scores',PCA_Z{i}(:,1:2),'VarLabels',vbls);
             title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+            xlabel("PC1");
+            ylabel("PC2");
+        end
+        xlim([-1 1]);
+        ylim([-1 1]);
+        % T-squared control chart
+        % Computing T2 control chart
+        T2 = cell(chosen_nWTs, 1);
+        for i = 1: length(norm_down_Z)
+            T2{i} = t2comp(norm_down_Z{i}, PCA_coeff, PCA_latent, chosen_nPCs);
+            subplot(3,2, i*2);
+            plot(down_Z_Idx{i}, T2{i});
+            xlabel("Sample");
+            ylabel("T2 Square Scores");
+            title(["T-squared control chart of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+        end
+
+        % Computing the biplot with PC2 and PC3
+        figure;
+        vbls = {'Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6', ...
+        'Sensor 7','Sensor 8','Sensor 9','Sensor 10','Sensor 11','Sensor 12', ...
+        'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
+        'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
+        'Sensor 25','Sensor 26','Sensor 27'};
+        for i = 1: length(PCA_Z)
+            subplot(3,2,i*2-1);
+            biplot(PCA_coeff(:,2:3),'Scores',PCA_Z{i}(:,2:3),'VarLabels',vbls);
+            title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+            xlabel("PC2");
+            ylabel("PC3");
         end
         xlim([-1 1]);
         ylim([-1 1]);
