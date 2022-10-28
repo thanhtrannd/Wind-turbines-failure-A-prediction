@@ -405,7 +405,7 @@ for factor = 1:4
     % Getting the number of PCs to keep
     ori_chosen_nPCs = find(cumsum(PCA_pexp)>threshold, 1);
      %nPCs_test = 2:ori_chosen_nPCs
-     nPCs_test = [2:3]
+     nPCs_test = 3:ori_chosen_nPCs;
      for i_nPCs = numel(nPCs_test)
          chosen_nPCs = nPCs_test(i_nPCs);
         %     % Pareto chart of explained variance
@@ -506,10 +506,10 @@ for factor = 1:4
         'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
         'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
         'Sensor 25','Sensor 26','Sensor 27'};
-        for i = 1: length(PCA_Z)
-            subplot(3,2,i*2-1);
-            biplot(PCA_coeff(:,1:2),'Scores',PCA_Z{i}(:,1:2),'VarLabels',vbls);
-            title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+        for j = 1: length(PCA_Z)
+            subplot(3,2,j*2-1);
+            biplot(PCA_coeff(:,1:2),'Scores',PCA_Z{j}(:,1:2),'VarLabels',vbls);
+            title(["Biplot of " + chosen_turbine_idx{j}, "downsampling factor = " + downsampling_factor]);
             xlabel("PC1");
             ylabel("PC2");
         end
@@ -518,13 +518,13 @@ for factor = 1:4
         % T-squared control chart
         % Computing T2 control chart
         T2 = cell(chosen_nWTs, 1);
-        for i = 1: length(norm_down_Z)
-            T2{i} = t2comp(norm_down_Z{i}, PCA_coeff, PCA_latent, chosen_nPCs);
-            subplot(3,2, i*2);
-            plot(down_Z_Idx{i}, T2{i});
+        for j = 1: length(norm_down_Z)
+            T2{j} = t2comp(norm_down_Z{j}, PCA_coeff, PCA_latent, chosen_nPCs);
+            subplot(3,2, j*2);
+            plot(down_Z_Idx{j}, T2{j});
             xlabel("Sample");
             ylabel("T2 Square Scores");
-            title(["T-squared control chart of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+            title(["T-squared control chart of " + chosen_turbine_idx{j}, "downsampling factor = " + downsampling_factor]);
         end
 
         % Computing the biplot with PC2 and PC3
@@ -534,10 +534,10 @@ for factor = 1:4
         'Sensor 13','Sensor 14','Sensor 15','Sensor 16','Sensor 17','Sensor 18', ...
         'Sensor 19','Sensor 20','Sensor 21','Sensor 22','Sensor 23','Sensor 24', ...
         'Sensor 25','Sensor 26','Sensor 27'};
-        for i = 1: length(PCA_Z)
-            subplot(3,2,i*2-1);
-            biplot(PCA_coeff(:,2:3),'Scores',PCA_Z{i}(:,2:3),'VarLabels',vbls);
-            title(["Biplot of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+        for j = 1: length(PCA_Z)
+            subplot(3,2,j*2-1);
+            biplot(PCA_coeff(:,2:3),'Scores',PCA_Z{j}(:,2:3),'VarLabels',vbls);
+            title(["Biplot of " + chosen_turbine_idx{j}, "downsampling factor = " + downsampling_factor]);
             xlabel("PC2");
             ylabel("PC3");
         end
@@ -546,18 +546,77 @@ for factor = 1:4
         % T-squared control chart
         % Computing T2 control chart
         T2 = cell(chosen_nWTs, 1);
-        for i = 1: length(norm_down_Z)
-            T2{i} = t2comp(norm_down_Z{i}, PCA_coeff, PCA_latent, chosen_nPCs);
-            subplot(3,2, i*2);
-            plot(down_Z_Idx{i}, T2{i});
+        for j = 1: length(norm_down_Z)
+            T2{j} = t2comp(norm_down_Z{j}, PCA_coeff, PCA_latent, chosen_nPCs);
+            subplot(3,2, j*2);
+            plot(down_Z_Idx{j}, T2{j});
             xlabel("Sample");
             ylabel("T2 Square Scores");
-            title(["T-squared control chart of " + chosen_turbine_idx{i}, "downsampling factor = " + downsampling_factor]);
+            title(["T-squared control chart of " + chosen_turbine_idx{j}, "downsampling factor = " + downsampling_factor]);
+        end
+        
+        %%Fault detection
+        % create class variable
+        objClass = ones(length(PCA_Z{1}(:,1)), 1);
+        objClass2 = 2 * ones(length(PCA_Z{2}(:,1)), 1);
+        objClass3 = 3 * ones(length(PCA_Z{3}(:,1)), 1);
+        class = categorical([objClass; objClass2; objClass3]);
+        
+        % Computing control charts for only the chosen no of princial components
+        for j = 3
+        
+            % Compute T2
+            ncomp(j).T2             = t2comp(norm_down_Z{1}, PCA_coeff, PCA_latent, chosen_nPCs);
+            ncomp(j).T2test1         = t2comp(norm_down_Z{2}, PCA_coeff, PCA_latent, chosen_nPCs);
+            ncomp(j).T2test2         = t2comp(norm_down_Z{3}, PCA_coeff, PCA_latent, chosen_nPCs);
+        
+            % Compute SPEx
+            ncomp(j).SPEx           = qcomp(norm_down_Z{1}, PCA_coeff, chosen_nPCs);
+            ncomp(j).SPExtest1       = qcomp(norm_down_Z{2}, PCA_coeff, chosen_nPCs);
+            ncomp(j).SPExtest2       = qcomp(norm_down_Z{3}, PCA_coeff, chosen_nPCs);
+        
+            % Compute T2 limites
+            ncomp(j).T2lim          = mean(ncomp(j).T2) + 3 * std(ncomp(j).T2);
+            ncomp(j).T2limwar       = mean(ncomp(j).T2) + 2 * std(ncomp(j).T2);
+        
+            % Compute SPEx limits
+            ncomp(j).SPExlim        = mean(ncomp(j).SPEx) + 3 * std(ncomp(j).SPEx);
+            ncomp(j).SPExlimwar     = mean(ncomp(j).SPEx) + 2 * std(ncomp(j).SPEx);
+        
+        end
+        
+        % Analyzing control charts
+        [nrows1, ncols1]    =  size(norm_down_Z{1});
+        [nrows2, ncols2]    =  size(norm_down_Z{2});
+        [nrows3, ncols3]    =  size(norm_down_Z{3});
+        
+        figure; ii = 1;
+        for i = 3
+            ncomp(i).T2comb = [ncomp(i).T2; ncomp(i).T2test1; ncomp(i).T2test2];
+            nrows = nrows1 + nrows2 + nrows3;
+            subplot(1, 2, ii); ii = ii + 1;
+            gscatter(1:nrows, [ncomp(i).T2comb], class);
+            hold on
+            plot([1, nrows], [ncomp(i).T2lim, ncomp(i).T2lim], 'y--');
+            plot([1, nrows], [ncomp(i).T2limwar, ncomp(i).T2limwar], 'c--');
+            hold off
+            title("T2 Chart (model with " + string(i) + " PCs)");
+            legend(["Healthy", "Faulty 1", "Faulty 2"]);
+        
+            ncomp(i).SPExcomb = [ncomp(i).SPEx; ncomp(i).SPExtest1; ncomp(i).SPExtest2];
+            subplot(1, 2, ii); ii = ii + 1;
+            gscatter(1:nrows, ncomp(i).SPExcomb, class);
+            hold on
+            plot([1, nrows], [ncomp(i).SPExlim, ncomp(i).SPExlim], 'y--');
+            plot([1, nrows], [ncomp(i).SPExlimwar, ncomp(i).SPExlimwar], 'c--');
+            hold off
+            title("SPEx Chart (model with " + string(i) + " PCs)");
+            legend(["Healthy", "Faulty 1", "Faulty 2"]);
         end
 
      end
-
 end
+
 % T2 Function
 function T2     = t2comp(data, loadings, latent, comp)
         score       = data * loadings(:,1:comp);
@@ -565,6 +624,26 @@ function T2     = t2comp(data, loadings, latent, comp)
         T2          = sum(standscores.^2,2);
 end
 
+function Qfac   = qcomp(data, loadings, comp)
+score       = data * loadings(:,1:comp);
+reconstructed = score * loadings(:,1:comp)';
+residuals   = bsxfun(@minus, data, reconstructed);
+Qfac        = sum(residuals.^2,2);
+end
+
+function T2varcontr    = t2contr(data, loadings, latent, comp)
+score           = data * loadings(:,1:comp);
+standscores     = bsxfun(@times, score(:,1:comp), 1./sqrt(latent(1:comp,:))');
+T2contr         = abs(standscores*loadings(:,1:comp)');
+T2varcontr      = sum(T2contr,1);
+end
+
+function Qcontr   = qcontr(data, loadings, comp)
+score         = data * loadings(:,1:comp);
+reconstructed = score * loadings(:,1:comp)';
+residuals     = bsxfun(@minus, data, reconstructed);
+Qcontr        = sum(residuals.^2, 1);
+end
 
 
     
