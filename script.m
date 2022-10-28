@@ -406,7 +406,7 @@ for factor = 1:4
     ori_chosen_nPCs = find(cumsum(PCA_pexp)>threshold, 1);
      %nPCs_test = 2:ori_chosen_nPCs
      nPCs_test = 3:ori_chosen_nPCs;
-     for i_nPCs = numel(nPCs_test)
+     for i_nPCs = 1:numel(nPCs_test)
          chosen_nPCs = nPCs_test(i_nPCs);
         %     % Pareto chart of explained variance
     %     figure;
